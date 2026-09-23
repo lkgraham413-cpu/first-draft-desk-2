@@ -337,6 +337,14 @@
   }
 
   .step-body{flex:1; min-width:0;}
+  .voice-field{display:flex; gap:6px; align-items:flex-start; min-width:0;}
+  .voice-field > input,.voice-field > textarea{flex:1; min-width:0;}
+  .step-top .voice-field{flex:1;}
+  .mic-btn{flex:0 0 auto; width:34px; height:34px; border:1px solid var(--rule); border-radius:4px; background:var(--paper-raised); color:var(--ink-soft); cursor:pointer;}
+  .mic-btn:hover,.mic-btn.listening{color:var(--pencil); border-color:var(--pencil);}
+  .mic-btn:disabled{opacity:.45; cursor:default;}
+  .voice-tools{display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--ink-soft); margin-top:10px;}
+  .voice-status{font-size:.8rem; color:var(--ink-soft); min-height:1.3em;}
   .step-top{
     display:flex;
     align-items:baseline;
@@ -585,6 +593,8 @@
         <input type="date" id="dueDate">
         <span class="due-status" id="dueStatus"></span>
       </div>
+      <div class="voice-tools"><button id="commandMic" class="mic-btn" type="button" aria-label="Speak a roadmap command" title="Speak a roadmap command">🎙</button><span>Say “next stage”, “previous stage”, “add step”, “open notes”, or “publish roadmap”.</span></div>
+      <p class="voice-status" id="voiceStatus" role="status" aria-live="polite"></p>
     </div>
 
     <div class="steps" id="stepsList"></div>
@@ -625,6 +635,7 @@
       <button class="close-btn" id="closeNotes" aria-label="Close">&times;</button>
     </div>
     <p class="notes-hint">Jot down quotes, sources, character facts, or anything else you're gathering while you write. Saved automatically, with spellcheck on.</p>
+    <div class="voice-tools"><button id="notesMic" class="mic-btn" type="button" aria-label="Dictate research notes" title="Dictate research notes">🎙</button><span>Dictate research notes</span></div>
     <textarea class="notes-textarea" id="notesArea" spellcheck="true" placeholder="e.g. Quote from the 1962 interview: &quot;...&quot;  — check page number before citing."></textarea>
     <div class="sheet-foot">
       <button class="dismiss-btn" id="closeNotes2">Back to writing</button>
@@ -801,6 +812,81 @@
   var notesArea = document.getElementById("notesArea");
   var closeNotes = document.getElementById("closeNotes");
   var closeNotes2 = document.getElementById("closeNotes2");
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var activeRecognition = null, activeButton = null;
+  var voiceStatus = document.getElementById("voiceStatus");
+  function stopListening(){
+    if(activeRecognition){ activeRecognition.stop(); activeRecognition = null; }
+    if(activeButton){ activeButton.classList.remove("listening"); activeButton.setAttribute("aria-pressed","false"); activeButton = null; }
+  }
+  function attachMic(button, target){
+    if(!SpeechRecognition){
+      button.disabled = true;
+      button.title = "Speech recognition is unavailable in this browser";
+      return;
+    }
+    button.addEventListener("click", function(){
+      if(activeButton === button){ stopListening(); voiceStatus.textContent = "Listening stopped."; return; }
+      stopListening();
+      var recognition = new SpeechRecognition();
+      recognition.lang = navigator.language || "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      activeRecognition = recognition;
+      activeButton = button;
+      button.classList.add("listening");
+      button.setAttribute("aria-pressed","true");
+      voiceStatus.textContent = target ? "Listening for dictation…" : "Listening for a command…";
+      recognition.onresult = function(event){
+        var words = event.results[0][0].transcript;
+        if(target){
+          var before = target.value;
+          target.value = before + (before && !/\s$/.test(before) ? " " : "") + words;
+          target.dispatchEvent(new Event("input", {bubbles:true}));
+          voiceStatus.textContent = "Added spoken text. You can edit it.";
+        }else{
+          var command = words.trim().toLowerCase().replace(/[.!?]+$/, "");
+          var actions = {
+            "next stage":nextStage, "go to next stage":nextStage,
+            "previous stage":prevStage, "go to previous stage":prevStage,
+            "add step":addStepBtn, "add a step":addStepBtn,
+            "open notes":notesBtn, "research notes":notesBtn,
+            "publish roadmap":publishBtn, "show roadmap":publishBtn
+          };
+          if(actions[command]){ actions[command].click(); voiceStatus.textContent = "Command: " + command + "."; }
+          else voiceStatus.textContent = "Command not recognized. Try one of the examples above.";
+        }
+      };
+      recognition.onerror = function(event){
+        if(event.error !== "aborted") voiceStatus.textContent = event.error === "not-allowed" ? "Microphone permission was denied." : "Could not recognize speech. Please try again or type.";
+      };
+      recognition.onend = function(){
+        if(activeRecognition === recognition){
+          activeRecognition = null;
+          button.classList.remove("listening");
+          button.setAttribute("aria-pressed","false");
+          activeButton = null;
+        }
+      };
+      try{ recognition.start(); }catch(e){ stopListening(); voiceStatus.textContent = "Could not start the microphone."; }
+    });
+  }
+  attachMic(document.getElementById("commandMic"), null);
+  attachMic(document.getElementById("notesMic"), notesArea);
+  function addFieldMic(field, label){
+    var wrap = document.createElement("div");
+    wrap.className = "voice-field";
+    field.parentNode.insertBefore(wrap, field);
+    wrap.appendChild(field);
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "mic-btn";
+    button.textContent = "🎙";
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    wrap.appendChild(button);
+    attachMic(button, field);
+  }
 
   TOPICS.forEach(function(t){
     var o = document.createElement("option");
@@ -836,6 +922,7 @@
   }
 
   function renderMain(){
+    stopListening();
     var stage = STAGES[state.activeStage];
     stageEyebrow.textContent = "Stage " + (state.activeStage+1) + " of " + STAGES.length;
     stageTitle.textContent = stage.name;
@@ -885,6 +972,7 @@
       });
       top.appendChild(index);
       top.appendChild(titleInput);
+      addFieldMic(titleInput, "Dictate step title");
 
       var descArea = document.createElement("textarea");
       descArea.className = "step-desc";
@@ -901,6 +989,7 @@
 
       body.appendChild(top);
       body.appendChild(descArea);
+      addFieldMic(descArea, "Dictate step description");
 
       if(meta.hint){
         var hint = document.createElement("div");
