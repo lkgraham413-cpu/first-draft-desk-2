@@ -245,6 +245,30 @@
   }
   .notes-btn:hover{border-color:var(--brass); color:var(--brass);}
 
+  .contact-btn{
+    margin-top:8px;
+    width:100%;
+    background:none;
+    color:var(--ink);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:10px 12px;
+    font-family:'Special Elite',monospace;
+    font-size:0.75rem;
+    cursor:pointer;
+  }
+  .contact-btn:hover{border-color:var(--pencil); color:var(--pencil);}
+  .contact-form{display:grid; gap:14px;}
+  .contact-form label{display:grid; gap:6px; font-size:0.85rem;}
+  .contact-form input,.contact-form textarea{
+    width:100%; padding:10px 12px; background:var(--paper);
+    color:var(--ink); border:1px solid var(--rule); border-radius:4px;
+    font:inherit;
+  }
+  .contact-form textarea{min-height:140px; resize:vertical;}
+  .contact-form :is(input,textarea):focus{outline:2px solid var(--brass); outline-offset:1px;}
+  .contact-form button{background:var(--ink); color:var(--paper); border:0; border-radius:3px; padding:11px 16px; cursor:pointer;}
+  .contact-hint,.contact-status{font-size:0.8rem; color:var(--ink-soft); line-height:1.5;}
   /* ---------- Main ---------- */
   .main{
     flex:1;
@@ -580,6 +604,7 @@
       </div>
       <button class="publish-btn" id="publishBtn">Publish your roadmap</button>
       <button class="notes-btn" id="notesBtn">Research notes</button>
+      <button class="contact-btn" id="contactBtn" type="button">Contact</button>
     </div>
   </aside>
 
@@ -640,6 +665,23 @@
     <div class="sheet-foot">
       <button class="dismiss-btn" id="closeNotes2">Back to writing</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="contactOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <div class="sheet-head">
+      <div><span class="eyebrow">Get in touch</span><h2 id="contactTitle">Contact</h2></div>
+      <button class="close-btn" id="closeContact" type="button" aria-label="Close contact form">&times;</button>
+    </div>
+    <p class="contact-hint">Fill in your details and copy your message to send it through your preferred email or messaging app.</p>
+    <form class="contact-form" id="contactForm">
+      <label for="contactName">Your name <input id="contactName" name="name" autocomplete="name" required></label>
+      <label for="contactEmail">Your email <input id="contactEmail" name="email" type="email" autocomplete="email" required></label>
+      <label for="contactMessage">Your message <textarea id="contactMessage" name="message" required></textarea></label>
+      <button type="submit">Copy message</button>
+      <span class="contact-status" id="contactStatus" role="status" aria-live="polite"></span>
+    </form>
   </div>
 </div>
 
@@ -1109,6 +1151,39 @@
   dismissBtn.addEventListener("click", function(){ overlay.hidden = true; });
   printBtn.addEventListener("click", function(){ window.print(); });
   overlay.addEventListener("click", function(e){ if(e.target === overlay) overlay.hidden = true; });
+
+  var contactOverlay = document.getElementById("contactOverlay");
+  var contactBtn = document.getElementById("contactBtn");
+  var contactForm = document.getElementById("contactForm");
+  contactBtn.addEventListener("click", function(){
+    contactOverlay.hidden = false;
+    document.getElementById("contactName").focus();
+  });
+  document.getElementById("closeContact").addEventListener("click", function(){
+    contactOverlay.hidden = true; contactBtn.focus();
+  });
+  contactOverlay.addEventListener("click", function(event){
+    if(event.target === contactOverlay){ contactOverlay.hidden = true; contactBtn.focus(); }
+  });
+  document.addEventListener("keydown", function(event){
+    if(event.key === "Escape" && !contactOverlay.hidden){ contactOverlay.hidden = true; contactBtn.focus(); }
+  });
+  contactForm.addEventListener("submit", function(event){
+    event.preventDefault();
+    var message = "Name: " + document.getElementById("contactName").value.trim() +
+      "\nEmail: " + document.getElementById("contactEmail").value.trim() +
+      "\n\n" + document.getElementById("contactMessage").value.trim();
+    var status = document.getElementById("contactStatus");
+    if(!navigator.clipboard || !navigator.clipboard.writeText){
+      status.textContent = "Copying is unavailable here. Select the text in the form to copy it.";
+      return;
+    }
+    navigator.clipboard.writeText(message).then(function(){
+      status.textContent = "Copied. Paste it into an email or message to send.";
+    }, function(){
+      status.textContent = "Copying failed. Select the text in the form to copy it.";
+    });
+  });
 
   renderTopic();
   renderRail();
