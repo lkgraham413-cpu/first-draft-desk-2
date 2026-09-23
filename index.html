@@ -674,12 +674,12 @@
       <div><span class="eyebrow">Get in touch</span><h2 id="contactTitle">Contact</h2></div>
       <button class="close-btn" id="closeContact" type="button" aria-label="Close contact form">&times;</button>
     </div>
-    <p class="contact-hint">Fill in your details and copy your message to send it through your preferred email or messaging app.</p>
+    <p class="contact-hint">Fill in your details, then open your email app to send the message.</p>
     <form class="contact-form" id="contactForm">
       <label for="contactName">Your name <input id="contactName" name="name" autocomplete="name" required></label>
       <label for="contactEmail">Your email <input id="contactEmail" name="email" type="email" autocomplete="email" required></label>
       <label for="contactMessage">Your message <textarea id="contactMessage" name="message" required></textarea></label>
-      <button type="submit">Copy message</button>
+      <button type="submit">Open email to send</button>
       <span class="contact-status" id="contactStatus" role="status" aria-live="polite"></span>
     </form>
   </div>
@@ -1173,16 +1173,12 @@
     var message = "Name: " + document.getElementById("contactName").value.trim() +
       "\nEmail: " + document.getElementById("contactEmail").value.trim() +
       "\n\n" + document.getElementById("contactMessage").value.trim();
-    var status = document.getElementById("contactStatus");
-    if(!navigator.clipboard || !navigator.clipboard.writeText){
-      status.textContent = "Copying is unavailable here. Select the text in the form to copy it.";
-      return;
-    }
-    navigator.clipboard.writeText(message).then(function(){
-      status.textContent = "Copied. Paste it into an email or message to send.";
-    }, function(){
-      status.textContent = "Copying failed. Select the text in the form to copy it.";
-    });
+    var subject = "First Draft Desk contact from " + document.getElementById("contactName").value.trim();
+    var url = "mailto:lkgraham413@gmail.com?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(message);
+    document.getElementById("contactStatus").textContent =
+      "Your email app will open. Review the message and press Send there.";
+    window.location.href = url;
   });
 
   renderTopic();
