@@ -347,6 +347,11 @@
   .due-status.overdue{color:var(--pencil); border-color:var(--pencil);}
   .due-status.complete{color:var(--ink-soft);}
 
+  .free-write{background:var(--accent-wash); border:1px solid var(--rule); border-radius:5px; padding:16px 18px; margin-bottom:24px;}
+  .free-write h3{font-size:1rem; margin:0 0 6px;}
+  .free-write p{font-size:.82rem; color:var(--ink-soft); line-height:1.5; margin:0 0 10px;}
+  .free-write textarea{width:100%; min-height:100px; background:var(--paper-raised); color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:10px; font:inherit; resize:vertical;}
+  .free-write #freeWriteStatus{min-height:1.2em; margin:7px 0 0;}
   .steps{
     display:flex;
     flex-direction:column;
@@ -388,6 +393,8 @@
   .mic-btn:disabled{opacity:.45; cursor:default;}
   .voice-tools{display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--ink-soft); margin-top:10px;}
   .voice-status{font-size:.8rem; color:var(--ink-soft); min-height:1.3em;}
+  .command-btn{background:var(--paper-raised); color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:7px 10px; cursor:pointer;}
+  .command-btn:hover,.command-btn.listening{border-color:var(--pencil); color:var(--pencil);}
   .read-controls{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;}
   .read-controls button{background:var(--paper-raised); color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:8px 10px; cursor:pointer;}
   .read-controls button:first-child{background:var(--pencil); color:var(--button-ink); border-color:var(--pencil);}
@@ -656,7 +663,7 @@
         <input type="date" id="dueDate">
         <span class="due-status" id="dueStatus"></span>
       </div>
-      <div class="voice-tools"><button id="commandMic" class="mic-btn" type="button" aria-label="Speak a roadmap command" title="Speak a roadmap command">🎙</button><span>Say “next stage”, “add step”, “open contact”, or “read this stage”.</span></div>
+      <div class="voice-tools"><button id="topDictationMic" class="mic-btn" type="button" aria-label="Speak freely to write" aria-pressed="false" title="Speak freely to write">🎙</button><span>Speak freely to write below.</span><button id="commandMic" class="command-btn" type="button" aria-label="Use voice commands">Voice commands</button></div>
       <p class="voice-status" id="voiceStatus" role="status" aria-live="polite"></p>
       <div class="read-controls" aria-label="Read this stage aloud">
         <button type="button" id="readStageBtn">▶ Read this stage aloud</button>
@@ -665,6 +672,16 @@
         <span id="readStatus" role="status" aria-live="polite"></span>
       </div>
     </div>
+
+    <section class="free-write" aria-labelledby="freeWriteTitle">
+      <h3 id="freeWriteTitle">Speak to write anything</h3>
+      <p>Press the microphone and say whatever you want. Your words appear below for you to edit and are saved in this browser.</p>
+      <div class="voice-field">
+        <textarea id="freeWriteArea" aria-label="Your writing" spellcheck="true" placeholder="Speak or type your ideas here…"></textarea>
+        <button type="button" class="mic-btn" id="freeWriteMic" aria-label="Dictate your writing" aria-pressed="false" title="Dictate your writing">🎙</button>
+      </div>
+      <p id="freeWriteStatus" role="status" aria-live="polite"></p>
+    </section>
 
     <div class="steps" id="stepsList"></div>
 
@@ -793,7 +810,7 @@
   var state = null;
 
   function loadState(){
-    var fallback = { topic:"novel", activeStage:0, custom:{}, edits:{}, done:{}, dates:{}, notes:"", streak:{count:0,lastDate:null} };
+    var fallback = { topic:"novel", activeStage:0, custom:{}, edits:{}, done:{}, dates:{}, notes:"", freeWriting:"", streak:{count:0,lastDate:null} };
     try{
       var raw = localStorage.getItem(STORE_KEY);
       if(raw){
@@ -969,6 +986,7 @@
       if(activeButton === button){ stopListening(); status.textContent = "Listening stopped."; return; }
       stopListening();
       stopReading();
+      if(target) target.focus();
       var recognition = new SpeechRecognition();
       recognition.lang = navigator.language || "en-US";
       recognition.interimResults = false;
@@ -1017,6 +1035,14 @@
   attachMic(document.getElementById("commandMic"), null);
   attachMic(document.getElementById("notesMic"), notesArea);
   attachMic(document.getElementById("contactMic"), document.getElementById("contactMessage"), document.getElementById("contactStatus"));
+  var freeWriteArea = document.getElementById("freeWriteArea");
+  freeWriteArea.value = state.freeWriting || "";
+  freeWriteArea.addEventListener("input", function(){
+    state.freeWriting = freeWriteArea.value;
+    saveState();
+  });
+  attachMic(document.getElementById("freeWriteMic"), freeWriteArea, document.getElementById("freeWriteStatus"));
+  attachMic(document.getElementById("topDictationMic"), freeWriteArea, voiceStatus);
   function addFieldMic(field, label){
     var wrap = document.createElement("div");
     wrap.className = "voice-field";
@@ -1031,6 +1057,9 @@
     wrap.appendChild(button);
     attachMic(button, field);
   }
+
+  addFieldMic(document.getElementById("contactName"), "Dictate your name");
+  addFieldMic(document.getElementById("contactEmail"), "Dictate your email address");
 
   TOPICS.forEach(function(t){
     var o = document.createElement("option");
