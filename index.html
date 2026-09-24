@@ -1,11 +1,11 @@
 <title>The First Draft Desk</title>
 <style>
   :root{
-    --paper:#EBE8DE;
-    --paper-raised:#F5F3EB;
+    --paper:#F8F1EB;
+    --paper-raised:#FFF9F5;
     --ink:#1D2027;
     --ink-soft:#565B66;
-    --rule:#CFC9B8;
+    --rule:#DECBC1;
     --pencil:#B1483A;
     --accent-wash:#F9E6E0;
     --button-ink:#FFFFFF;
@@ -18,11 +18,11 @@
   }
   :root:not([data-theme="light"]){
     @media (prefers-color-scheme: dark){
-      --paper:#191A1D;
-      --paper-raised:#232529;
-      --ink:#EAE6D9;
+      --paper:#201B1B;
+      --paper-raised:#2A2323;
+      --ink:#F2EAE4;
       --ink-soft:#A6A296;
-      --rule:#3A3B3A;
+      --rule:#59413D;
       --pencil:#E79080;
       --accent-wash:#322622;
       --button-ink:#191A1D;
@@ -34,11 +34,11 @@
     }
   }
   :root[data-theme="dark"]{
-    --paper:#191A1D;
-    --paper-raised:#232529;
-    --ink:#EAE6D9;
+    --paper:#201B1B;
+    --paper-raised:#2A2323;
+    --ink:#F2EAE4;
     --ink-soft:#A6A296;
-    --rule:#3A3B3A;
+    --rule:#59413D;
     --pencil:#E79080;
       --accent-wash:#322622;
       --button-ink:#191A1D;
@@ -96,6 +96,7 @@
     flex:0 0 280px;
     padding:28px 20px 28px 24px;
     border-right:1px solid var(--rule);
+    background:linear-gradient(180deg,var(--accent-wash),var(--paper) 78%);
     position:sticky;
     top:env(safe-area-inset-top, 0px);
     align-self:flex-start;
@@ -158,10 +159,10 @@
     cursor:pointer;
     border:1px solid transparent;
   }
-  .stage-item:hover{background:var(--paper-raised);}
+  .stage-item:hover{background:var(--accent-wash);}
   .stage-item.active{
-    background:var(--paper-raised);
-    border-color:var(--rule);
+    background:var(--accent-wash);
+    border-color:var(--pencil);
   }
   .stage-num{
     font-family:'Special Elite',monospace;
@@ -293,7 +294,7 @@
   .stage-head{
     margin-bottom:26px;
     padding-bottom:20px;
-    border-bottom:1px solid var(--rule);
+    border-bottom:2px solid var(--pencil);
   }
   .stage-head .eyebrow{margin-bottom:8px;}
   .stage-head h2{
@@ -358,7 +359,9 @@
     box-shadow:var(--shadow);
     display:flex;
     gap:14px;
+    transition:transform .2s ease,box-shadow .2s ease;
   }
+  .step:hover{transform:translateY(-2px); box-shadow:0 7px 18px rgba(68,36,30,.1);}
   .step.done{border-left:3px solid var(--done);}
   .step:not(.done){border-left:3px solid var(--pencil-soft);}
 
@@ -567,6 +570,16 @@
     color:var(--ink-soft);
     margin:0 0 12px;
     line-height:1.5;
+  }
+
+  .publish-btn{background:var(--pencil); color:var(--button-ink); transition:transform .2s ease,box-shadow .2s ease;}
+  .publish-btn:hover{opacity:1; transform:translateY(-2px); box-shadow:0 5px 12px rgba(68,36,30,.16);}
+  .notes-btn,.stage-nav button{transition:background .2s ease,border-color .2s ease,transform .2s ease;}
+  .notes-btn:hover,.stage-nav button:not(:disabled):hover{background:var(--accent-wash); transform:translateY(-2px);}
+  .step:focus-within{border-color:var(--pencil);}
+  @media (prefers-reduced-motion:reduce){
+    .step,.publish-btn,.notes-btn,.stage-nav button{transition:none;}
+    .step:hover,.publish-btn:hover,.notes-btn:hover,.stage-nav button:not(:disabled):hover{transform:none;}
   }
 
   @media print{
