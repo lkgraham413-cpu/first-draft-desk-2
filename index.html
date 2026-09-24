@@ -386,6 +386,13 @@
   .mic-btn:disabled{opacity:.45; cursor:default;}
   .voice-tools{display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--ink-soft); margin-top:10px;}
   .voice-status{font-size:.8rem; color:var(--ink-soft); min-height:1.3em;}
+  .read-controls{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px;}
+  .read-controls button{background:var(--paper-raised); color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:8px 10px; cursor:pointer;}
+  .read-controls button:first-child{background:var(--pencil); color:var(--button-ink); border-color:var(--pencil);}
+  .read-controls button:disabled{opacity:.45; cursor:default;}
+  .read-controls button:focus-visible{outline:2px solid var(--pencil); outline-offset:2px;}
+  #readStatus{font-size:.8rem; color:var(--ink-soft);}
+
   .step-top{
     display:flex;
     align-items:baseline;
@@ -649,6 +656,12 @@
       </div>
       <div class="voice-tools"><button id="commandMic" class="mic-btn" type="button" aria-label="Speak a roadmap command" title="Speak a roadmap command">🎙</button><span>Say “next stage”, “previous stage”, “add step”, “open notes”, or “publish roadmap”.</span></div>
       <p class="voice-status" id="voiceStatus" role="status" aria-live="polite"></p>
+      <div class="read-controls" aria-label="Read this stage aloud">
+        <button type="button" id="readStageBtn">▶ Read this stage aloud</button>
+        <button type="button" id="pauseReadBtn" disabled>Pause</button>
+        <button type="button" id="stopReadBtn" disabled>Stop</button>
+        <span id="readStatus" role="status" aria-live="polite"></span>
+      </div>
     </div>
 
     <div class="steps" id="stepsList"></div>
@@ -879,6 +892,63 @@
   var notesArea = document.getElementById("notesArea");
   var closeNotes = document.getElementById("closeNotes");
   var closeNotes2 = document.getElementById("closeNotes2");
+  var readStageBtn = document.getElementById("readStageBtn");
+  var pauseReadBtn = document.getElementById("pauseReadBtn");
+  var stopReadBtn = document.getElementById("stopReadBtn");
+  var readStatus = document.getElementById("readStatus");
+  var speechEngine = window.speechSynthesis;
+  var activeUtterance = null;
+  function resetReadControls(message){
+    activeUtterance = null;
+    pauseReadBtn.disabled = true;
+    pauseReadBtn.textContent = "Pause";
+    stopReadBtn.disabled = true;
+    readStatus.textContent = message || "";
+  }
+  function stopReading(){
+    if(speechEngine) speechEngine.cancel();
+    resetReadControls("");
+  }
+  if(!speechEngine || !window.SpeechSynthesisUtterance){
+    readStageBtn.disabled = true;
+    readStageBtn.title = "Read aloud is unavailable in this browser";
+    readStatus.textContent = "Read aloud is unavailable in this browser.";
+  }else{
+    readStageBtn.addEventListener("click", function(){
+      stopListening();
+      stopReading();
+      var stage = STAGES[state.activeStage];
+      var lines = [stage.name, stage.desc, "Your steps:"];
+      allStepsOf(stage).forEach(function(step, index){
+        var meta = stepMeta(step, stage);
+        lines.push("Step " + (index + 1) + ". " + meta.title + ". " + meta.desc);
+      });
+      var utterance = new SpeechSynthesisUtterance(lines.join("\n"));
+      utterance.lang = navigator.language || "en-US";
+      utterance.rate = 0.9;
+      activeUtterance = utterance;
+      utterance.onend = function(){if(activeUtterance === utterance) resetReadControls("Finished reading.");};
+      utterance.onerror = function(){if(activeUtterance === utterance) resetReadControls("Could not read aloud. Please try again.");};
+      pauseReadBtn.disabled = false;
+      stopReadBtn.disabled = false;
+      readStatus.textContent = "Reading this stage aloud.";
+      speechEngine.speak(utterance);
+    });
+    pauseReadBtn.addEventListener("click", function(){
+      if(!activeUtterance) return;
+      if(speechEngine.paused){
+        speechEngine.resume();
+        pauseReadBtn.textContent = "Pause";
+        readStatus.textContent = "Reading this stage aloud.";
+      }else{
+        speechEngine.pause();
+        pauseReadBtn.textContent = "Resume";
+        readStatus.textContent = "Reading paused.";
+      }
+    });
+    stopReadBtn.addEventListener("click", function(){stopReading(); readStatus.textContent = "Reading stopped.";});
+    window.addEventListener("pagehide", stopReading);
+  }
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var activeRecognition = null, activeButton = null;
   var voiceStatus = document.getElementById("voiceStatus");
@@ -990,6 +1060,7 @@
 
   function renderMain(){
     stopListening();
+    stopReading();
     var stage = STAGES[state.activeStage];
     stageEyebrow.textContent = "Stage " + (state.activeStage+1) + " of " + STAGES.length;
     stageTitle.textContent = stage.name;
