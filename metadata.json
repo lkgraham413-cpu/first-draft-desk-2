@@ -1,0 +1,15 @@
+{
+  "name": "The First Draft Desk",
+  "description": "A writing roadmap with a contact form.",
+  "entrypoint": "index.html",
+  "contact": {
+    "fields": [
+      "name",
+      "email",
+      "message"
+    ],
+    "recipient": "lkgraham413@gmail.com",
+    "delivery": "mailto",
+    "submission_note": "Opens the visitor's email app; the visitor must send the prepared message."
+  }
+}
