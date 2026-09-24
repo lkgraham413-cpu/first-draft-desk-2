@@ -278,6 +278,8 @@
     font:inherit;
   }
   .contact-form textarea{min-height:88px; resize:vertical;}
+  .contact-form .mic-btn{width:38px; height:38px; padding:0; background:var(--paper-raised); color:var(--ink); border:1px solid var(--rule); flex:0 0 auto;}
+  .contact-form .mic-btn:hover,.contact-form .mic-btn.listening{color:var(--pencil); border-color:var(--pencil); transform:none; box-shadow:none;}
   .contact-form :is(input,textarea):focus{outline:2px solid var(--brass); outline-offset:1px;}
   .contact-form button{background:var(--pencil); color:var(--button-ink); border:0; border-radius:3px; padding:11px 16px; cursor:pointer; transition:transform .2s ease,box-shadow .2s ease;}
   .contact-form button:hover{transform:translateY(-2px); box-shadow:0 5px 12px rgba(29,32,39,.16);}
@@ -654,7 +656,7 @@
         <input type="date" id="dueDate">
         <span class="due-status" id="dueStatus"></span>
       </div>
-      <div class="voice-tools"><button id="commandMic" class="mic-btn" type="button" aria-label="Speak a roadmap command" title="Speak a roadmap command">🎙</button><span>Say “next stage”, “previous stage”, “add step”, “open notes”, or “publish roadmap”.</span></div>
+      <div class="voice-tools"><button id="commandMic" class="mic-btn" type="button" aria-label="Speak a roadmap command" title="Speak a roadmap command">🎙</button><span>Say “next stage”, “add step”, “open contact”, or “read this stage”.</span></div>
       <p class="voice-status" id="voiceStatus" role="status" aria-live="polite"></p>
       <div class="read-controls" aria-label="Read this stage aloud">
         <button type="button" id="readStageBtn">▶ Read this stage aloud</button>
@@ -678,11 +680,11 @@
 <section class="contact-panel" aria-labelledby="contactTitle">
   <span class="eyebrow">Get in touch</span>
   <h2 id="contactTitle">Contact</h2>
-  <p class="contact-hint">Fill in your details, then open your email app to send the message.</p>
+  <p class="contact-hint">Type or speak your message, then open your email app to send it.</p>
   <form class="contact-form" id="contactForm">
     <label for="contactName">Your name <input id="contactName" name="name" autocomplete="name" required></label>
     <label for="contactEmail">Your email <input id="contactEmail" name="email" type="email" autocomplete="email" required></label>
-    <label for="contactMessage">Your message <textarea id="contactMessage" name="message" required></textarea></label>
+    <label for="contactMessage">Your message <span class="voice-field"><textarea id="contactMessage" name="message" required></textarea><button class="mic-btn" id="contactMic" type="button" aria-label="Dictate your message" aria-pressed="false" title="Dictate your message">🎙</button></span></label>
     <button type="submit">Open email to send</button>
     <span class="contact-status" id="contactStatus" role="status" aria-live="polite"></span>
   </form>
@@ -956,15 +958,17 @@
     if(activeRecognition){ activeRecognition.stop(); activeRecognition = null; }
     if(activeButton){ activeButton.classList.remove("listening"); activeButton.setAttribute("aria-pressed","false"); activeButton = null; }
   }
-  function attachMic(button, target){
+  function attachMic(button, target, statusElement){
+    var status = statusElement || voiceStatus;
     if(!SpeechRecognition){
       button.disabled = true;
       button.title = "Speech recognition is unavailable in this browser";
       return;
     }
     button.addEventListener("click", function(){
-      if(activeButton === button){ stopListening(); voiceStatus.textContent = "Listening stopped."; return; }
+      if(activeButton === button){ stopListening(); status.textContent = "Listening stopped."; return; }
       stopListening();
+      stopReading();
       var recognition = new SpeechRecognition();
       recognition.lang = navigator.language || "en-US";
       recognition.interimResults = false;
@@ -973,14 +977,14 @@
       activeButton = button;
       button.classList.add("listening");
       button.setAttribute("aria-pressed","true");
-      voiceStatus.textContent = target ? "Listening for dictation…" : "Listening for a command…";
+      status.textContent = target ? "Listening for dictation…" : "Listening for a command…";
       recognition.onresult = function(event){
         var words = event.results[0][0].transcript;
         if(target){
           var before = target.value;
           target.value = before + (before && !/\s$/.test(before) ? " " : "") + words;
           target.dispatchEvent(new Event("input", {bubbles:true}));
-          voiceStatus.textContent = "Added spoken text. You can edit it.";
+          status.textContent = "Added spoken text. You can edit it.";
         }else{
           var command = words.trim().toLowerCase().replace(/[.!?]+$/, "");
           var actions = {
@@ -988,14 +992,16 @@
             "previous stage":prevStage, "go to previous stage":prevStage,
             "add step":addStepBtn, "add a step":addStepBtn,
             "open notes":notesBtn, "research notes":notesBtn,
-            "publish roadmap":publishBtn, "show roadmap":publishBtn
+            "publish roadmap":publishBtn, "show roadmap":publishBtn,
+            "open contact":document.querySelector(".contact-btn"),
+            "read this stage":readStageBtn, "stop reading":stopReadBtn
           };
-          if(actions[command]){ actions[command].click(); voiceStatus.textContent = "Command: " + command + "."; }
-          else voiceStatus.textContent = "Command not recognized. Try one of the examples above.";
+          if(actions[command]){ actions[command].click(); status.textContent = "Command: " + command + "."; }
+          else status.textContent = "Command not recognized. Try one of the examples above.";
         }
       };
       recognition.onerror = function(event){
-        if(event.error !== "aborted") voiceStatus.textContent = event.error === "not-allowed" ? "Microphone permission was denied." : "Could not recognize speech. Please try again or type.";
+        if(event.error !== "aborted") status.textContent = event.error === "not-allowed" ? "Microphone permission was denied." : "Could not recognize speech. Please try again or type.";
       };
       recognition.onend = function(){
         if(activeRecognition === recognition){
@@ -1005,11 +1011,12 @@
           activeButton = null;
         }
       };
-      try{ recognition.start(); }catch(e){ stopListening(); voiceStatus.textContent = "Could not start the microphone."; }
+      try{ recognition.start(); }catch(e){ stopListening(); status.textContent = "Could not start the microphone."; }
     });
   }
   attachMic(document.getElementById("commandMic"), null);
   attachMic(document.getElementById("notesMic"), notesArea);
+  attachMic(document.getElementById("contactMic"), document.getElementById("contactMessage"), document.getElementById("contactStatus"));
   function addFieldMic(field, label){
     var wrap = document.createElement("div");
     wrap.className = "voice-field";
