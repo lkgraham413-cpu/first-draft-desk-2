@@ -8,6 +8,8 @@
     --rule:#DECBC1;
     --pencil:#B1483A;
     --accent-wash:#F9E6E0;
+    --creamy-orange:#E8A66F;
+    --orange-wash:#FBE9D8;
     --button-ink:#FFFFFF;
     --pencil-soft:#DC827433;
     --brass:#8C6E2F;
@@ -25,6 +27,8 @@
       --rule:#59413D;
       --pencil:#E79080;
       --accent-wash:#322622;
+      --creamy-orange:#D9A273;
+      --orange-wash:#3A2B24;
       --button-ink:#191A1D;
       --pencil-soft:#E7908026;
       --brass:#D8B76B;
@@ -41,6 +45,8 @@
     --rule:#59413D;
     --pencil:#E79080;
       --accent-wash:#322622;
+      --creamy-orange:#D9A273;
+      --orange-wash:#3A2B24;
       --button-ink:#191A1D;
     --pencil-soft:#E7908026;
     --brass:#D8B76B;
@@ -163,7 +169,8 @@
     cursor:pointer;
     border:1px solid transparent;
   }
-  .stage-item:hover{background:var(--accent-wash);}
+  .stage-item:hover{background:var(--orange-wash); transform:translateX(3px);}
+  .stage-item{transition:background .2s ease,transform .2s ease;}
   .stage-item.active{
     background:var(--accent-wash);
     border-color:var(--pencil);
@@ -171,8 +178,15 @@
   .stage-num{
     font-family:'Special Elite',monospace;
     font-size:0.72rem;
-    color:var(--ink-soft);
-    width:1.4em;
+    color:var(--ink);
+    background:var(--orange-wash);
+    border:1px solid var(--creamy-orange);
+    border-radius:50%;
+    width:26px;
+    height:26px;
+    display:grid;
+    place-items:center;
+    flex:0 0 26px;
   }
   .stage-item.active .stage-num{color:var(--pencil);}
   .stage-name{
@@ -213,7 +227,7 @@
   .bar > span{
     display:block;
     height:100%;
-    background:var(--pencil);
+    background:linear-gradient(90deg,var(--creamy-orange),var(--pencil));
     transition:width .3s ease;
   }
 
@@ -304,6 +318,19 @@
     padding:34px clamp(16px,4vw,48px) 60px;
   }
 
+  .story-friend{
+    float:right; display:grid; place-items:center; position:relative;
+    width:78px; height:78px; margin:0 0 10px 18px;
+    border-radius:42% 58% 54% 46%; background:var(--orange-wash);
+    border:2px solid var(--creamy-orange);
+    animation:friend-pop .6s ease-out both;
+  }
+  .story-friend .pencil{font-size:2.6rem; line-height:1; transform:rotate(-20deg); display:block;}
+  .story-friend .sparkle{position:absolute; top:0; right:4px; color:var(--pencil); font-size:1.2rem;}
+  .story-friend:hover .pencil{animation:pencil-wiggle .6s ease-in-out;}
+  @keyframes friend-pop{from{opacity:0; transform:scale(.75) rotate(-8deg);}to{opacity:1; transform:scale(1) rotate(0);}}
+  @keyframes pencil-wiggle{0%,100%{transform:rotate(-20deg);}50%{transform:rotate(10deg);}}
+  @media (max-width:520px){.story-friend{width:58px;height:58px;margin-left:10px;}.story-friend .pencil{font-size:2rem;}}
   .stage-head{
     margin-bottom:26px;
     padding-bottom:20px;
@@ -384,8 +411,9 @@
     transition:transform .2s ease,box-shadow .2s ease;
   }
   .step:hover{transform:translateY(-2px); box-shadow:0 7px 18px rgba(68,36,30,.1);}
+  .step{border-radius:9px;}
   .step.done{border-left:3px solid var(--done);}
-  .step:not(.done){border-left:3px solid var(--pencil-soft);}
+  .step:not(.done){border-left:4px solid var(--creamy-orange);}
 
   .step-check{
     flex:0 0 auto;
@@ -609,6 +637,9 @@
   .notes-btn:hover,.stage-nav button:not(:disabled):hover{background:var(--accent-wash); transform:translateY(-2px);}
   .step:focus-within{border-color:var(--pencil);}
   @media (prefers-reduced-motion:reduce){
+    .story-friend,.story-friend:hover .pencil{animation:none;}
+    .stage-item{transition:none;}
+    .stage-item:hover{transform:none;}
     .step,.publish-btn,.notes-btn,.stage-nav button{transition:none;}
     .step:hover,.publish-btn:hover,.notes-btn:hover,.stage-nav button:not(:disabled):hover{transform:none;}
   }
@@ -670,6 +701,7 @@
 
   <main class="main">
     <div class="stage-head">
+      <div class="story-friend" aria-hidden="true"><span class="pencil">✏️</span><span class="sparkle">✦</span></div>
       <span class="eyebrow" id="stageEyebrow"></span>
       <h2 id="stageTitle"></h2>
       <p id="stageDesc"></p>
