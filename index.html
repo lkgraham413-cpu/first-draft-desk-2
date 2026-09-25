@@ -165,14 +165,14 @@
     align-items:center;
     gap:10px;
     padding:9px 10px;
-    border-radius:3px;
+    border-radius:10px;
     cursor:pointer;
     border:1px solid transparent;
   }
   .stage-item:hover{background:var(--orange-wash); transform:translateX(3px);}
   .stage-item{transition:background .2s ease,transform .2s ease;}
   .stage-item.active{
-    background:var(--accent-wash);
+    background:var(--orange-wash);
     border-color:var(--pencil);
   }
   .stage-num{
@@ -318,19 +318,35 @@
     padding:34px clamp(16px,4vw,48px) 60px;
   }
 
-  .story-friend{
-    float:right; display:grid; place-items:center; position:relative;
-    width:78px; height:78px; margin:0 0 10px 18px;
-    border-radius:42% 58% 54% 46%; background:var(--orange-wash);
-    border:2px solid var(--creamy-orange);
-    animation:friend-pop .6s ease-out both;
+  .story-banner{
+    display:flex; align-items:center; gap:22px;
+    background:linear-gradient(125deg,var(--orange-wash),var(--paper-raised) 65%,var(--accent-wash));
+    border:2px solid var(--creamy-orange); border-radius:18px;
+    padding:20px 24px; margin-bottom:28px;
+    box-shadow:0 8px 0 var(--pencil-soft);
   }
-  .story-friend .pencil{font-size:2.6rem; line-height:1; transform:rotate(-20deg); display:block;}
-  .story-friend .sparkle{position:absolute; top:0; right:4px; color:var(--pencil); font-size:1.2rem;}
-  .story-friend:hover .pencil{animation:pencil-wiggle .6s ease-in-out;}
-  @keyframes friend-pop{from{opacity:0; transform:scale(.75) rotate(-8deg);}to{opacity:1; transform:scale(1) rotate(0);}}
-  @keyframes pencil-wiggle{0%,100%{transform:rotate(-20deg);}50%{transform:rotate(10deg);}}
-  @media (max-width:520px){.story-friend{width:58px;height:58px;margin-left:10px;}.story-friend .pencil{font-size:2rem;}}
+  .banner-mascot{
+    width:105px; height:105px; flex:0 0 105px; position:relative;
+    display:grid; place-items:center;
+    background:var(--creamy-orange); border-radius:40% 60% 55% 45%;
+    box-shadow:inset -7px -8px 0 rgba(104,57,35,.09);
+  }
+  .mascot-pencil{font-size:3.5rem; line-height:1; display:block; animation:pencil-bob 2.6s ease-in-out infinite;}
+  .mascot-star{position:absolute; color:var(--pencil); font-size:1.2rem; animation:star-twinkle 2.6s ease-in-out infinite;}
+  .star-one{top:4px; left:-8px;}
+  .star-two{right:-8px; bottom:5px; animation-delay:1.1s;}
+  .banner-copy .eyebrow{color:var(--pencil); font-weight:700;}
+  .banner-copy h2{font-family:'Fraunces',Georgia,serif; font-weight:700; font-size:clamp(1.55rem,3vw,2.1rem); color:var(--pencil); margin:5px 0 7px;}
+  .banner-copy p{margin:0; color:var(--ink); line-height:1.5; font-size:.9rem;}
+  @keyframes pencil-bob{0%,100%{transform:translateY(0) rotate(-11deg);}50%{transform:translateY(-8px) rotate(5deg);}}
+  @keyframes star-twinkle{0%,100%{opacity:.5;transform:scale(.75);}50%{opacity:1;transform:scale(1.2);}}
+  @media(max-width:520px){
+    .story-banner{gap:12px;padding:15px;border-radius:13px;}
+    .banner-mascot{width:66px;height:66px;flex-basis:66px;}
+    .mascot-pencil{font-size:2.3rem;}
+    .banner-copy h2{font-size:1.4rem;}
+    .banner-copy p{font-size:.8rem;}
+  }
   .stage-head{
     margin-bottom:26px;
     padding-bottom:20px;
@@ -637,7 +653,7 @@
   .notes-btn:hover,.stage-nav button:not(:disabled):hover{background:var(--accent-wash); transform:translateY(-2px);}
   .step:focus-within{border-color:var(--pencil);}
   @media (prefers-reduced-motion:reduce){
-    .story-friend,.story-friend:hover .pencil{animation:none;}
+    .mascot-pencil,.mascot-star{animation:none;}
     .stage-item{transition:none;}
     .stage-item:hover{transform:none;}
     .step,.publish-btn,.notes-btn,.stage-nav button{transition:none;}
@@ -700,8 +716,15 @@
   </aside>
 
   <main class="main">
+    <div class="story-banner">
+      <div class="banner-mascot" aria-hidden="true"><span class="mascot-star star-one">✦</span><span class="mascot-pencil">✏️</span><span class="mascot-star star-two">✦</span></div>
+      <div class="banner-copy">
+        <span class="eyebrow">Your story adventure</span>
+        <h2>Let's make a story!</h2>
+        <p>Pick a stage, speak or type your ideas, and celebrate every little step.</p>
+      </div>
+    </div>
     <div class="stage-head">
-      <div class="story-friend" aria-hidden="true"><span class="pencil">✏️</span><span class="sparkle">✦</span></div>
       <span class="eyebrow" id="stageEyebrow"></span>
       <h2 id="stageTitle"></h2>
       <p id="stageDesc"></p>
