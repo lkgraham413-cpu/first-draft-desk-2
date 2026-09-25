@@ -269,7 +269,7 @@
   .contact-panel{background:linear-gradient(135deg,var(--accent-wash),var(--paper-raised) 70%); border:1px solid var(--rule); border-left:4px solid var(--pencil); border-radius:6px; padding:18px 20px; margin:28px auto 40px; max-width:640px;}
   .contact-panel h2{margin:6px 0 10px; font-size:1.35rem;}
   .contact-form{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;}
-  .contact-form label:nth-child(3),.contact-form button,.contact-status{grid-column:1 / -1;}
+  .contact-form label:nth-child(3),.contact-form label:nth-child(4),.contact-form button,.contact-status{grid-column:1 / -1;}
   @media (max-width:520px){.contact-panel{margin-inline:12px;} .contact-form{grid-template-columns:1fr;}}
   .contact-form label{display:grid; gap:6px; font-size:0.85rem;}
   .contact-form input,.contact-form textarea{
@@ -701,6 +701,7 @@
   <form class="contact-form" id="contactForm" action="https://script.google.com/macros/s/AKfycbxzemRhSO6i7DmnpwZdfBetRurMeSnbJ2PU43S6pK1EHju4ADXZAPT1ISfsChz8ikzghw/exec" method="post" target="_blank" rel="noopener">
     <label for="contactName">Your name <input id="contactName" name="name" autocomplete="name" required></label>
     <label for="contactEmail">Your email <input id="contactEmail" name="email" type="email" autocomplete="email" required></label>
+    <label for="contactPhone">Phone number (optional) <input id="contactPhone" name="phone" type="tel" autocomplete="tel"></label>
     <label for="contactMessage">Your message <span class="voice-field"><textarea id="contactMessage" name="message" required></textarea><button class="mic-btn" id="contactMic" type="button" aria-label="Dictate your message" aria-pressed="false" title="Dictate your message">🎙</button></span></label>
     <button type="submit">Send message</button>
     <span class="contact-status" id="contactStatus" role="status" aria-live="polite"></span>
@@ -1060,6 +1061,7 @@
 
   addFieldMic(document.getElementById("contactName"), "Dictate your name");
   addFieldMic(document.getElementById("contactEmail"), "Dictate your email address");
+  addFieldMic(document.getElementById("contactPhone"), "Dictate your phone number");
 
   TOPICS.forEach(function(t){
     var o = document.createElement("option");
