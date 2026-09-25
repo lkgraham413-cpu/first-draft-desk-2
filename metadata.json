@@ -6,10 +6,14 @@
     "fields": [
       "name",
       "email",
+      "phone",
       "message"
     ],
     "delivery": "Google Apps Script web app",
     "endpoint": "https://script.google.com/macros/s/AKfycbxzemRhSO6i7DmnpwZdfBetRurMeSnbJ2PU43S6pK1EHju4ADXZAPT1ISfsChz8ikzghw/exec",
-    "submission_note": "Submits to the linked Google Sheet; a new tab displays the Apps Script success or error response."
+    "submission_note": "Submits to the linked Google Sheet; a new tab displays the Apps Script success or error response.",
+    "optional_fields": [
+      "phone"
+    ]
   }
 }
